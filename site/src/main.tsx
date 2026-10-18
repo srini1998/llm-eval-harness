@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { DataField } from "@designcodeio/threeui/components/DataField";
 import { ArrowUpRight, CheckSquare } from "@phosphor-icons/react";
 import data from "./data/squad.json";
+import replay from "./data/replay.json";
 import provenance from "./data/provenance.json";
 import recorded from "./data/baseline.json";
 import { metric, gate } from "./metrics";
@@ -33,11 +34,29 @@ function App() {
     [message, setMessage] = useState(""),
     [entries, setEntries] = useState<unknown[]>([]),
     [manual, setManual] = useState("1872");
+  const [topic, setTopic] = useState("Travel & places"),
+    [quizIndex, setQuizIndex] = useState(0),
+    [scored, setScored] = useState(false),
+    [mode, setMode] = useState("");
+  const travelTitles = [
+    "Fresno,_California",
+    "Jacksonville,_Florida",
+    "Southern_California",
+    "Victoria_(Australia)",
+    "Warsaw",
+    "Rhine",
+    "Amazon_rainforest",
+  ];
+  const pool =
+    topic === "All topics"
+      ? data
+      : data.filter((d) => travelTitles.includes(d.title));
+  const quiz = pool[quizIndex] ?? pool[0];
   const stop = useRef(false);
   const sample = Array.from(
     { length: count },
     (_, i) =>
-      data.filter((d) => d.answerable === (i % 2 === 0))[Math.floor(i / 2)],
+      pool.filter((d) => d.answerable === (i % 2 === 0))[Math.floor(i / 2)],
   );
   const complete = results.length === count && !busy;
   const decision = complete
@@ -50,6 +69,7 @@ function App() {
     : null;
   const log = (entry: unknown) => setEntries((e) => [...e, entry]);
   async function run() {
+    setMode("Fresh cloud run");
     stop.current = false;
     setBusy(true);
     setResults([]);
@@ -120,31 +140,36 @@ function App() {
         <div className="hero-copy">
           <p className="eyebrow reveal">
             {t(
-              "CHECK THE ANSWERS BEFORE YOU SHIP THE PROMPT.",
+              "A TRAVEL BOT SHOULD KNOW WHEN TO SAY “I DON’T KNOW.”",
               "プロンプトを公開する前に、答えを確かめる。",
             )}
           </p>
           <h1 className="reveal">
-            {t("Confident?", "自信がある？")}
+            {t("Know the place?", "自信がある？")}
             <br />
-            <span>{t("Check it.", "確かめよう。")}</span>
+            <span>{t("Prove it.", "確かめよう。")}</span>
           </h1>
           <p className="intro reveal">
             {t(
-              "A friendlier prompt can quietly make your assistant worse. Put it beside a grounded baseline, ask the same questions, and see which answers survive the answer key.",
+              "Try a travel reading challenge, then see how two AI prompts answered the same questions. The passage is the source of truth for this task. A confident guess still loses points.",
               "親切そうなプロンプトで、かえって精度が下がることがあります。同じ質問で基準と比較し、正解に照らして確認しましょう。",
             )}
           </p>
-          <a href="#test" className="cta reveal">
-            {t("Test your prompt", "プロンプトを試す")}
+          <a href="#quiz" className="cta reveal">
+            {t("Try the reading challenge", "プロンプトを試す")}
             <ArrowUpRight size={20} />
           </a>
         </div>
         <div className="answer-stamp reveal">
           <CheckSquare size={44} />
           <span>SQuAD 2.0</span>
-          <strong>75 + 75</strong>
-          <p>{t("answerable + unanswerable", "回答可能 ＋ 回答不可能")}</p>
+          <strong>33 questions</strong>
+          <p>
+            {t(
+              "travel questions, including missing answers",
+              "回答可能 ＋ 回答不可能",
+            )}
+          </p>
           <span>{t("A REAL PUBLIC ANSWER KEY", "公開データの実際の正解")}</span>
         </div>
       </section>
@@ -160,81 +185,239 @@ function App() {
             {t("Same model. Same questions.", "同じモデル。同じ質問。")}
           </span>
         </div>
-        <div className="test-grid">
-          <section className="prompt-panel">
-            <label htmlFor="candidate">
-              {t("Your candidate instructions", "候補の指示")}
-            </label>
-            <textarea
-              id="candidate"
-              value={prompt}
+        <section id="quiz" className="reading-challenge">
+          <div>
+            <p className="eyebrow">01 / CAN YOU FIND THE ANSWER?</p>
+            <h2>A little travel trivia.</h2>
+            <p>
+              Read the passage and answer from that passage only. If the detail
+              is missing, type NO_ANSWER. These are historical
+              reading-comprehension passages, not current travel advice.
+            </p>
+            <label htmlFor="topic">Question collection</label>
+            <select
+              id="topic"
               disabled={busy}
-              maxLength={1500}
+              value={topic}
               onChange={(e) => {
-                setPrompt(e.target.value);
+                setTopic(e.target.value);
+                setQuizIndex(0);
+                setManual("");
+                setScored(false);
                 setResults([]);
                 setMessage("");
+                setMode("");
+              }}
+            >
+              <option>Travel &amp; places</option>
+              <option>All topics</option>
+            </select>
+            <label htmlFor="quiz-question">Choose a question</label>
+            <select
+              id="quiz-question"
+              value={quizIndex}
+              onChange={(e) => {
+                setQuizIndex(Number(e.target.value));
+                setManual("");
+                setScored(false);
+              }}
+            >
+              {pool.map((q, i) => (
+                <option key={q.id} value={i}>
+                  {i + 1}. {q.title.replaceAll("_", " ")}
+                </option>
+              ))}
+            </select>
+          </div>
+          <article className="quiz-card">
+            <p className="eyebrow">{quiz.title.replaceAll("_", " ")}</p>
+            <h3>{quiz.question}</h3>
+            <p className="passage">{quiz.context}</p>
+            <label htmlFor="quiz-answer">Your answer</label>
+            <input
+              id="quiz-answer"
+              value={manual}
+              maxLength={1000}
+              placeholder="Answer, or NO_ANSWER"
+              onChange={(e) => {
+                setManual(e.target.value);
+                setScored(false);
               }}
             />
-            <details>
-              <summary>
-                {t("See the baseline instructions", "基準の指示を見る")}
-              </summary>
-              <p>{baselinePrompt}</p>
-            </details>
-            <div className="options">
-              <label>
-                {t("Paired questions", "比較する質問数")}
-                <select
-                  disabled={busy}
-                  value={count}
-                  onChange={(e) => {
-                    setCount(Number(e.target.value));
-                    setResults([]);
-                    setMessage("");
-                  }}
-                >
-                  {[2, 4, 6, 10].map((n) => (
-                    <option key={n}>{n}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                {t("Allowed F1 drop", "許容 F1 低下")}
-                <select
-                  disabled={busy}
-                  value={tolerance}
-                  onChange={(e) => setTolerance(Number(e.target.value))}
-                >
-                  {[0, 0.02, 0.05].map((n) => (
-                    <option key={n} value={n}>
-                      {percent(n)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <ModelControl state={ai.state} load={ai.load} stop={halt} ja={ja} />
-            <button
-              className="cta"
-              disabled={busy || ai.state.phase !== "ready"}
-              onClick={run}
-            >
-              {busy
-                ? t("Comparing…", "比較中…")
-                : t("Run paired comparison", "比較を実行")}
+            <button className="cta" onClick={() => setScored(true)}>
+              Check my answer
             </button>
-            {busy && <button onClick={halt}>{t("Stop", "停止")}</button>}
+            {scored && (
+              <div className="quiz-score" role="status">
+                <strong>
+                  Exact match {percent(metric(manual, quiz.answers).em)} · Word
+                  overlap {percent(metric(manual, quiz.answers).f1)}
+                </strong>
+                <p>
+                  Reference:{" "}
+                  {quiz.answers.join(" / ") ||
+                    "NO_ANSWER—this passage does not contain the answer."}
+                </p>
+                <p>
+                  Word overlap gives partial credit; it is not a general truth
+                  detector.
+                </p>
+              </div>
+            )}
+          </article>
+        </section>
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">02 / CHECK THE AI ANSWERS</p>
+            <h2>Does the bot know when to stop?</h2>
+          </div>
+          <span>
+            {topic} · {pool.length} questions
+          </span>
+        </div>
+        <div className="replay-start">
+          <h3>Explore the real saved experiment</h3>
+          <p>
+            Load two actual Qwen 2.5 3B outputs per question and score them
+            again against the human references. One prompt required passage-only
+            answers and abstention; the other asked a helpful assistant for a
+            brief answer. This replay does not use the editable cloud prompt
+            below.
+          </p>
+          <label htmlFor="replay-size">Questions to compare</label>
+          <select
+            id="replay-size"
+            disabled={busy}
+            value={count}
+            onChange={(e) => {
+              setCount(Number(e.target.value));
+              setResults([]);
+              setMessage("");
+              setMode("");
+            }}
+          >
+            {[2, 4, 6, 10].map((n) => (
+              <option key={n} value={n}>
+                {n} paired questions
+              </option>
+            ))}
+          </select>
+          <button
+            className="cta"
+            disabled={busy}
+            onClick={() => {
+              const rows = sample.map((item) => {
+                const r = (
+                  replay as Record<
+                    string,
+                    Record<string, { prediction: string }>
+                  >
+                )[item.id];
+                return {
+                  item,
+                  baseline: r.baseline.prediction,
+                  candidate: r.candidate.prediction,
+                  b: metric(r.baseline.prediction, item.answers),
+                  c: metric(r.candidate.prediction, item.answers),
+                };
+              });
+              setResults(rows);
+              setMode("Recorded Qwen replay / original experiment prompts");
+              setMessage(
+                "Recorded outputs loaded and re-scored. No new model generation.",
+              );
+              log({
+                action: "re-score-recorded",
+                ids: sample.map((i) => i.id),
+              });
+            }}
+          >
+            Replay &amp; score saved AI answers
+          </button>
+        </div>
+        <div className="test-grid">
+          <section className="prompt-panel">
+            <details>
+              <summary>Generate a new comparison (optional cloud)</summary>
+              <label htmlFor="candidate">
+                {t("Your candidate instructions", "候補の指示")}
+              </label>
+              <textarea
+                id="candidate"
+                value={prompt}
+                disabled={busy}
+                maxLength={1500}
+                onChange={(e) => {
+                  setPrompt(e.target.value);
+                  setResults([]);
+                  setMessage("");
+                }}
+              />
+              <details>
+                <summary>
+                  {t("See the baseline instructions", "基準の指示を見る")}
+                </summary>
+                <p>{baselinePrompt}</p>
+              </details>
+              <div className="options">
+                <label>
+                  {t("Paired questions", "比較する質問数")}
+                  <select
+                    disabled={busy}
+                    value={count}
+                    onChange={(e) => {
+                      setCount(Number(e.target.value));
+                      setResults([]);
+                      setMessage("");
+                    }}
+                  >
+                    {[2, 4, 6, 10].map((n) => (
+                      <option key={n}>{n}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  {t("Allowed F1 drop", "許容 F1 低下")}
+                  <select
+                    disabled={busy}
+                    value={tolerance}
+                    onChange={(e) => setTolerance(Number(e.target.value))}
+                  >
+                    {[0, 0.02, 0.05].map((n) => (
+                      <option key={n} value={n}>
+                        {percent(n)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <ModelControl
+                state={ai.state}
+                load={ai.load}
+                stop={halt}
+                ja={ja}
+              />
+              <button
+                className="cta"
+                disabled={busy || ai.state.phase !== "ready"}
+                onClick={run}
+              >
+                {busy
+                  ? t("Comparing…", "比較中…")
+                  : t("Run paired comparison", "比較を実行")}
+              </button>
+              {busy && <button onClick={halt}>{t("Stop", "停止")}</button>}
+            </details>
             <output role="status">{message}</output>
             <p className="note">
               {t(
-                "2–10 questions × two prompts. CPU runs may take several minutes. Nothing is generated until you ask.",
+                "2–10 questions × two prompts. Replay is immediate. New cloud generations require a free provider connection and send the task text to that provider.",
                 "2〜10問×2種類の指示。CPU では数分かかる場合があります。操作するまで生成しません。",
               )}
             </p>
           </section>
           <section className="score-panel">
-            <p className="eyebrow">{t("THE RELEASE GATE", "リリースの判定")}</p>
+            <p className="eyebrow">{mode || "THE COMPARISON"}</p>
             <h3>
               {decision
                 ? decision.pass
@@ -317,36 +500,6 @@ function App() {
             },
           )}
         </section>
-        <section className="try-score">
-          <div>
-            <h3>
-              {t(
-                "Try the scorer without a download.",
-                "ダウンロードなしで採点を試す。",
-              )}
-            </h3>
-            <p>
-              {t(
-                "For question 1, type an answer. Exact match ignores punctuation, articles and case; token F1 gives partial credit. It is not a truth detector.",
-                "1問目の回答を入力。完全一致は記号・冠詞・大文字を無視し、単語 F1 は部分点を与えます。真実の判定ではありません。",
-              )}
-            </p>
-          </div>
-          <div>
-            <label>
-              {t("Your answer", "あなたの回答")}
-              <input
-                aria-label="Manual answer"
-                value={manual}
-                onChange={(e) => setManual(e.target.value)}
-              />
-            </label>
-            <output data-testid="manual-score">
-              EM {percent(metric(manual, sample[0].answers).em)} · F1{" "}
-              {percent(metric(manual, sample[0].answers).f1)}
-            </output>
-          </div>
-        </section>
         <section id="how" className="how">
           <p className="eyebrow">{t("WHY THIS EXISTS", "何に役立つか")}</p>
           <h2>
@@ -357,7 +510,7 @@ function App() {
           </h2>
           <p>
             {t(
-              "A support assistant should answer from the documentation or admit the answer is missing. Asking it to “use your general knowledge” may turn missing information into a confident mistake. Here, half the questions deliberately have no answer in the passage. You can see the tradeoff before a prompt change reaches users.",
+              "A support assistant should answer from the documentation or admit the answer is missing. Asking it to “use your general knowledge” may turn missing information into a confident mistake. In the full collection, half the questions deliberately have no answer in the passage; the travel subset has 15 answerable and 18 unanswerable questions. You can see the tradeoff before a prompt change reaches users.",
               "サポート AI は文書に基づいて答え、情報がなければ棄権すべきです。一般知識の利用を指示すると、欠落情報を誤って補うことがあります。ここでは半分が回答不可能な質問なので、変更の影響を確認できます。",
             )}
           </p>
@@ -365,7 +518,7 @@ function App() {
             <strong>0.715 → 0.380 F1</strong>
             <p>
               {t(
-                "Recorded local Qwen 2.5 3B, 150 questions. The open-answer prompt regressed; the gate rejected it. Same-model judge agreement was weak without references. The browser uses a different model (Gemma 3 1B), and fresh results are shown above.",
+                "Recorded local Qwen 2.5 3B, all 150 original questions. The open-answer prompt regressed; the gate rejected it. The travel replay above uses a subset and computes its own scores. New cloud runs use a different model and are labeled separately.",
                 "記録済み Qwen 2.5 3B、150問。一般回答プロンプトは悪化し、ゲートで拒否されました。ブラウザは別の Gemma 3 1B を使用し、新しい結果は上に表示されます。",
               )}
             </p>

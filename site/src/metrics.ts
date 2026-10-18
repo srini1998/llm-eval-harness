@@ -6,7 +6,11 @@ export const normalize = (s: string) =>
     .replace(/\s+/g, " ")
     .trim();
 export function metric(prediction: string, answers: string[]) {
-  const p = prediction.trim() === "NO_ANSWER" ? "" : prediction.trim();
+  const p =
+    prediction.trim() === "NO_ANSWER" ||
+    normalize(prediction).startsWith("unanswerable")
+      ? ""
+      : prediction.trim();
   const refs = answers.length ? answers : [""];
   const em = Math.max(
     ...refs.map((r) => Number(normalize(p) === normalize(r))),
