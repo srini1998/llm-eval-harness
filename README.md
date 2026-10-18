@@ -1,5 +1,7 @@
 # LLM Evaluation Harness
 
+**Current public website:** [answerkey-lab.vercel.app](https://answerkey-lab.vercel.app). The interface is English-only and its main task requires no AI-weight download. See [current interface, datasets and execution boundaries](site/INTERFACE.md). The backend experiments and historical measurements below are separate from the current public UI.
+
 A regression gate for LLM features. It answers two questions before a prompt or model change ships:
 
 1. **Did quality get worse?** Paired, item-level comparison on a fixed sample, with bootstrap

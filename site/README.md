@@ -1,8 +1,9 @@
 # Answer Key
-An end-user prompt release check. Run `npm ci && npm run dev`. Same on-device Gemma3 1B model, same SQuAD v2 questions, two prompts. English answers are compared with human reference spans using the standard English article/punctuation/case normalization and token-overlap F1. `NO_ANSWER` is exact and case-sensitive. Scoring does not use model self-judgment.
 
-Visitors choose a balanced paired cohort (2–10 questions), edit the candidate instructions and tolerance, download the model explicitly, then run both prompts. The gate requires F1 within tolerance and no drop in abstention on unanswerable items. Partial/stopped cohorts never get a gate verdict. One generation at a time, cancellable worker. Inputs stay on-device; remote requests only download packages and public model weights.
+Play a travel reading challenge and score actual saved AI answers against human references.
 
-This deliberately tiny, fixed exploratory sample is not a statistically powered release study; repeated tuning on visible references invalidates claims of unseen generalization. Recorded 150-item local Qwen results are clearly separate. The live browser model is Gemma3 1B. References are visible for inspection, not hidden.
+The public interface is English-only. Its main task requires no AI weights, account or paid API. See [current interface, data, verification and limits](INTERFACE.md) for the exact execution boundaries and the separately retained backend experiments.
 
-Dataset: SQuAD2 dev sample, Rajpurkar/Jia/Liang (2018), CC BY-SA4.0. Full source SHA/seed/attribution in src/data/provenance.json. ThreeUI Community DataField (MIT); self-hosted OFL fonts; GSAP with reduced-motion support. `node tests-metrics.mjs` verifies real normalization, F1 and gate negative cases. No paid API/provider is used.
+Run `npm ci`, then `npm run dev`. `npm run build` checks TypeScript and builds the website.
+
+Optional cloud generation, where offered, is disabled unless a server-side Groq key and `GROQ_FREE_PLAN_CONFIRMED=true` are set for an actual Free Plan account. No credentials, billing or paid fallback are configured. This is a provider-limited inference option, not model training. Never expose keys in Vite environment variables or browser code.
