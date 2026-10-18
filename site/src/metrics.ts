@@ -1,3 +1,64 @@
-export const normalize=(s:string)=>s.toLowerCase().replace(/[!"#$%&'()*+,\-./:;<=>?@[\]\\^_`{|}~]/g,'').replace(/\b(a|an|the)\b/g,' ').replace(/\s+/g,' ').trim();
-export function metric(prediction:string,answers:string[]){const p=prediction.trim()==='NO_ANSWER'?'':prediction.trim();const refs=answers.length?answers:[''];const em=Math.max(...refs.map(r=>Number(normalize(p)===normalize(r))));const f1=Math.max(...refs.map(r=>{const a=normalize(p).split(' ').filter(Boolean),b=normalize(r).split(' ').filter(Boolean);if(!a.length||!b.length)return Number(a.length===b.length);const counts=new Map<string,number>();for(const x of b)counts.set(x,(counts.get(x)??0)+1);let hits=0;for(const x of a)if((counts.get(x)??0)>0){hits++;counts.set(x,counts.get(x)!-1)}return 2*hits/(a.length+b.length)}));return {em,f1,abstained:p===''};}
-export function gate(baseline:{f1:number,abstained:boolean}[],candidate:{f1:number,abstained:boolean}[],answerable:boolean[],tolerance:number){if(!baseline.length||baseline.length!==candidate.length||candidate.length!==answerable.length)throw new Error('Mismatched paired cohort');const avg=(r:typeof baseline)=>r.reduce((a,b)=>a+b.f1,0)/r.length;const unanswerable=answerable.flatMap((a,i)=>a?[]:[i]);const abstain=(r:typeof baseline)=>unanswerable.length?unanswerable.filter(i=>r[i].abstained).length/unanswerable.length:null;const b=avg(baseline),c=avg(candidate),ba=abstain(baseline),ca=abstain(candidate);return {baselineF1:b,candidateF1:c,delta:c-b,baselineAbstention:ba,candidateAbstention:ca,pass:c>=b-tolerance&&(ba===null||ca!>=ba),items:candidate.length};}
+export const normalize = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[!"#$%&'()*+,\-./:;<=>?@[\]\\^_`{|}~]/g, "")
+    .replace(/\b(a|an|the)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+export function metric(prediction: string, answers: string[]) {
+  const p = prediction.trim() === "NO_ANSWER" ? "" : prediction.trim();
+  const refs = answers.length ? answers : [""];
+  const em = Math.max(
+    ...refs.map((r) => Number(normalize(p) === normalize(r))),
+  );
+  const f1 = Math.max(
+    ...refs.map((r) => {
+      const a = normalize(p).split(" ").filter(Boolean),
+        b = normalize(r).split(" ").filter(Boolean);
+      if (!a.length || !b.length) return Number(a.length === b.length);
+      const counts = new Map<string, number>();
+      for (const x of b) counts.set(x, (counts.get(x) ?? 0) + 1);
+      let hits = 0;
+      for (const x of a)
+        if ((counts.get(x) ?? 0) > 0) {
+          hits++;
+          counts.set(x, counts.get(x)! - 1);
+        }
+      return (2 * hits) / (a.length + b.length);
+    }),
+  );
+  return { em, f1, abstained: p === "" };
+}
+export function gate(
+  baseline: { f1: number; abstained: boolean }[],
+  candidate: { f1: number; abstained: boolean }[],
+  answerable: boolean[],
+  tolerance: number,
+) {
+  if (
+    !baseline.length ||
+    baseline.length !== candidate.length ||
+    candidate.length !== answerable.length
+  )
+    throw new Error("Mismatched paired cohort");
+  const avg = (r: typeof baseline) =>
+    r.reduce((a, b) => a + b.f1, 0) / r.length;
+  const unanswerable = answerable.flatMap((a, i) => (a ? [] : [i]));
+  const abstain = (r: typeof baseline) =>
+    unanswerable.length
+      ? unanswerable.filter((i) => r[i].abstained).length / unanswerable.length
+      : null;
+  const b = avg(baseline),
+    c = avg(candidate),
+    ba = abstain(baseline),
+    ca = abstain(candidate);
+  return {
+    baselineF1: b,
+    candidateF1: c,
+    delta: c - b,
+    baselineAbstention: ba,
+    candidateAbstention: ca,
+    pass: c >= b - tolerance && (ba === null || ca! >= ba),
+    items: candidate.length,
+  };
+}
