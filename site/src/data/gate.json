@@ -1,0 +1,28 @@
+{
+  "paired_items": 150,
+  "baseline": "grounded-v1",
+  "candidate": "open-v2",
+  "checks": {
+    "f1": {
+      "items": 150,
+      "allowed_drop": 0.02,
+      "mean_diff": -0.3345,
+      "ci95": [
+        -0.4202,
+        -0.2477
+      ],
+      "regressed": true
+    },
+    "abstention_accuracy_unanswerable": {
+      "items": 75,
+      "allowed_drop": 0.05,
+      "mean_diff": -0.6133,
+      "ci95": [
+        -0.72,
+        -0.5067
+      ],
+      "regressed": true
+    }
+  },
+  "passed": false
+}

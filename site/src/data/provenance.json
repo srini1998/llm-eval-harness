@@ -1,0 +1,10 @@
+{
+  "source": "https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v2.0.json",
+  "source_sha256": "80a5225e94905956a6446d296ca1093975c4d3b3260f1d6c8f68bc2ab77182d8",
+  "attribution": "SQuAD v2.0 dev set, Rajpurkar, Jia & Liang (2018), CC BY-SA 4.0",
+  "seed": 2026,
+  "items": 150,
+  "answerable": 75,
+  "unanswerable": 75,
+  "articles": 35
+}
