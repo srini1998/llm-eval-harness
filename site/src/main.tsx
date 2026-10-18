@@ -173,6 +173,7 @@ function App() {
               onChange={(e) => {
                 setPrompt(e.target.value);
                 setResults([]);
+                setMessage("");
               }}
             />
             <details>
@@ -190,6 +191,7 @@ function App() {
                   onChange={(e) => {
                     setCount(Number(e.target.value));
                     setResults([]);
+                    setMessage("");
                   }}
                 >
                   {[2, 4, 6, 10].map((n) => (
