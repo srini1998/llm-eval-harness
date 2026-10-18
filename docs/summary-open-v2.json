@@ -1,0 +1,30 @@
+{
+  "summary": {
+    "system": "open-v2",
+    "config_hash": "6f3cd7a8e5ca",
+    "model": "qwen2.5:3b",
+    "items": 150,
+    "exact_match": 0.2867,
+    "f1": 0.3802,
+    "f1_answerable": 0.7604,
+    "abstention_accuracy_unanswerable": 0.0,
+    "false_abstention_rate_answerable": 0.0,
+    "lexical_support": 0.8432,
+    "judge_supported_rate": 0.9067,
+    "judge_relevant_rate": 0.9733,
+    "median_latency_ms": 469
+  },
+  "judge_calibration": {
+    "items": 150,
+    "agreement": 0.4933,
+    "cohen_kappa": 0.1284,
+    "judge_pass_when_reference_fails": 0.8444,
+    "judge_fail_when_reference_passes": 0.0,
+    "confusion": {
+      "tp": 60,
+      "tn": 14,
+      "fp": 76,
+      "fn": 0
+    }
+  }
+}

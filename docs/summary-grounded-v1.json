@@ -1,0 +1,30 @@
+{
+  "summary": {
+    "system": "grounded-v1",
+    "config_hash": "20949d813488",
+    "model": "qwen2.5:3b",
+    "items": 150,
+    "exact_match": 0.6867,
+    "f1": 0.7147,
+    "f1_answerable": 0.816,
+    "abstention_accuracy_unanswerable": 0.6133,
+    "false_abstention_rate_answerable": 0.0933,
+    "lexical_support": 0.9924,
+    "judge_supported_rate": 0.9733,
+    "judge_relevant_rate": 1.0,
+    "median_latency_ms": 358
+  },
+  "judge_calibration": {
+    "items": 150,
+    "agreement": 0.7267,
+    "cohen_kappa": 0.0424,
+    "judge_pass_when_reference_fails": 0.9512,
+    "judge_fail_when_reference_passes": 0.0183,
+    "confusion": {
+      "tp": 107,
+      "tn": 2,
+      "fp": 39,
+      "fn": 2
+    }
+  }
+}

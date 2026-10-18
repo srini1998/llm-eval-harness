@@ -1,0 +1,19 @@
+name: eval-gate
+# Model calls happen locally (free Ollama). CI re-scores the committed run files
+# deterministically and enforces the regression gate, so it needs no model or API key.
+on: [push, pull_request]
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync
+      - run: uv run pytest -q
+      - name: Baseline against itself must pass
+        run: uv run evalh gate runs/grounded-v1.jsonl runs/grounded-v1.jsonl
+      - name: Harness must catch the known regression (open-v2 drops the abstention rule)
+        run: "! uv run evalh gate runs/grounded-v1.jsonl runs/open-v2.jsonl"
+      - name: Gate the proposed candidate, if one is committed
+        run: |
+          if [ -f runs/candidate.jsonl ]; then uv run evalh gate runs/grounded-v1.jsonl runs/candidate.jsonl; fi
