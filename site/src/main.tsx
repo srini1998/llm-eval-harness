@@ -69,6 +69,15 @@ function App() {
     : null;
   const log = (entry: unknown) => setEntries((e) => [...e, entry]);
   async function run() {
+    if (count > 4) {
+      setMessage(
+        "Fresh cloud runs are capped at 4 questions (8 calls) to stay inside the shared free quota. Choose 2 or 4.",
+      );
+      return;
+    }
+    let calls = 0,
+      totalMs = 0,
+      modelName = "";
     setMode("Fresh cloud run");
     stop.current = false;
     setBusy(true);
@@ -92,6 +101,9 @@ function App() {
             },
           ];
           const r = await ai.generate(messages, undefined, 72);
+          calls++;
+          totalMs += r.ms;
+          modelName = r.model ?? modelName;
           outputs.push(r.text.trim());
           log({ system, id: item.id, messages, ...r });
         }
@@ -116,7 +128,7 @@ function App() {
               "停止しました。未完了の評価では合格しません。",
             )
           : t(
-              "Paired run complete. Inspect every answer before you release.",
+              `Paired run complete: ${calls} answers from ${modelName} on Groq's free plan (${totalMs} ms total), each graded against the human SQuAD references by exact match and F1 — not by the model. Inspect every answer before you release.`,
               "比較が完了しました。リリース前に各回答を確認してください。",
             ),
       );
@@ -371,7 +383,7 @@ function App() {
                       setMessage("");
                     }}
                   >
-                    {[2, 4, 6, 10].map((n) => (
+                    {[2, 4].map((n) => (
                       <option key={n}>{n}</option>
                     ))}
                   </select>
@@ -411,7 +423,7 @@ function App() {
             <output role="status">{message}</output>
             <p className="note">
               {t(
-                "2–10 questions × two prompts. Replay is immediate. New cloud generations require a free provider connection and send the task text to that provider.",
+                "Replay: 2–10 questions × two prompts, immediate. Fresh cloud runs: 2–4 questions on openai/gpt-oss-20b (Groq free plan, shared daily cap); they send the passage and question to that provider and are graded by code.",
                 "2〜10問×2種類の指示。CPU では数分かかる場合があります。操作するまで生成しません。",
               )}
             </p>
